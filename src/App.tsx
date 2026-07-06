@@ -46,7 +46,10 @@ const migrateToArticlesStructure = (reports: any[]): SavedReport[] => {
   const newReportsMap: Record<string, SavedReport> = {};
 
   reports.forEach((item) => {
+    if (!item) return;
+
     if (item.articles && Array.isArray(item.articles)) {
+      if (!item.repository) return; // Skip invalid records without a repository
       const repoKey = item.id || `${item.repository.id}_${item.repository.source || "github"}`;
       if (!newReportsMap[repoKey]) {
         newReportsMap[repoKey] = item;
@@ -87,7 +90,9 @@ const migrateToArticlesStructure = (reports: any[]): SavedReport[] => {
   });
 
   Object.values(newReportsMap).forEach(r => {
-    r.articles.sort((a, b) => b.savedAt - a.savedAt);
+    if (r && r.articles) {
+      r.articles.sort((a, b) => b.savedAt - a.savedAt);
+    }
   });
 
   return Object.values(newReportsMap);
@@ -1544,7 +1549,7 @@ export default function App() {
                           const articlesCount = report.articles ? report.articles.length : 0;
                           
                           // Display name based on selected language (aiTitle) or fallbacks
-                          const displayTitle = report.repository.aiTitle || report.articles[0]?.detail.title || report.repository.fullName;
+                          const displayTitle = report.repository?.aiTitle || report.articles?.[0]?.detail?.title || report.repository?.fullName || "Unknown Repository";
                           
                           return (
                             <div 
@@ -1559,14 +1564,14 @@ export default function App() {
                                     <h4 className="font-black text-slate-800 text-base leading-snug hover:text-indigo-600 transition truncate">
                                       {displayTitle}
                                     </h4>
-                                    {displayTitle !== report.repository.fullName && (
+                                    {displayTitle !== report.repository?.fullName && report.repository?.fullName && (
                                       <span className="text-[10px] text-slate-400 font-mono font-bold tracking-tight truncate">
                                         {report.repository.fullName}
                                       </span>
                                     )}
                                   </div>
                                   <p className="text-xs text-slate-500 line-clamp-2 mt-1 italic">
-                                    {report.repository.description || "No description provided"}
+                                    {report.repository?.description || "No description provided"}
                                   </p>
                                 </div>
 
@@ -1574,9 +1579,9 @@ export default function App() {
                                   <div className="flex items-center gap-3">
                                     <span className="flex items-center gap-1">
                                       <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                                      {report.repository.stargazersCount?.toLocaleString()}
+                                      {report.repository?.stargazersCount?.toLocaleString() || "0"}
                                     </span>
-                                    {report.repository.language && (
+                                    {report.repository?.language && (
                                       <span className="flex items-center gap-1.5">
                                         <span className="w-2 h-2 rounded-full bg-indigo-500" />
                                         {report.repository.language}
@@ -1629,15 +1634,17 @@ export default function App() {
                                           minute: "2-digit",
                                         }
                                       );
-                                      const articleTitle = article.detail.title || (resolvedLang === "ja" ? "詳細解説レポート" : "Detailed Analysis Report");
+                                      const articleTitle = article.detail?.title || (resolvedLang === "ja" ? "詳細解説レポート" : "Detailed Analysis Report");
                                       
                                       return (
                                         <div 
                                           key={article.id}
                                           className="p-3 bg-slate-50 hover:bg-indigo-50/40 border border-slate-150 rounded-2xl flex flex-col gap-2 cursor-pointer transition group/art relative text-left"
                                           onClick={() => {
-                                            setSelectedRepo(report.repository);
-                                            setSelectedSavedReportDetail(article.detail);
+                                            if (report.repository) {
+                                              setSelectedRepo(report.repository);
+                                              setSelectedSavedReportDetail(article.detail);
+                                            }
                                           }}
                                         >
                                           <div className="flex items-start justify-between gap-2">
