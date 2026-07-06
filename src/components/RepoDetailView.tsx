@@ -23,6 +23,7 @@ import {
   Twitter,
   Link as LinkIcon,
   Save,
+  Cpu,
 } from "lucide-react";
 import { Repository, RepoDetail, SavedReport } from "../types";
 import { getUITranslations } from "../lib/translations";
@@ -661,6 +662,40 @@ export default function RepoDetailView({
                       ? "本技術レポートは、ユーザー指定のカスタムAIペルソナおよび分析ターゲット視点に基づいて完全にリアルタイム生成されています。"
                       : "This analytic report is compiled dynamically based on your custom AI personas, models, and selected target reader profiles."}
                   </p>
+                  
+                  {/* Collapsible Metadata */}
+                  <details className="mt-3 pt-3 border-t border-slate-800 text-[10px] text-slate-400 cursor-pointer group" id="metadata-accordion">
+                    <summary className="font-semibold select-none list-none flex items-center gap-1 hover:text-indigo-300 transition outline-none">
+                      <Cpu className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>{lang === "ja" ? "生成メタデータを確認" : "View Generation Metadata"}</span>
+                    </summary>
+                    <div className="mt-2.5 space-y-2 font-mono leading-relaxed text-[9px] text-slate-400 bg-slate-950/40 rounded-xl p-3 border border-slate-800/80" id="metadata-accordion-content">
+                      <div>
+                        <span className="text-slate-500">{lang === "ja" ? "モデル: " : "Model: "}</span>
+                        <span className="text-slate-300">{selectedModel}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">{lang === "ja" ? "プロバイダー: " : "Provider: "}</span>
+                        <span className="text-slate-300">{activeEndpoint.name}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">{lang === "ja" ? "エンドポイント: " : "Endpoint: "}</span>
+                        <span className="text-slate-300 truncate block" title={activeEndpoint.url}>{activeEndpoint.url}</span>
+                      </div>
+                      {personaPrompt && (
+                        <div className="space-y-1">
+                          <span className="text-slate-500 block">{lang === "ja" ? "ペルソナ: " : "Persona: "}</span>
+                          <span className="text-slate-400 block pl-2 border-l border-slate-800 max-h-24 overflow-y-auto whitespace-pre-wrap leading-normal">{personaPrompt}</span>
+                        </div>
+                      )}
+                      {audiencePrompt && (
+                        <div className="space-y-1">
+                          <span className="text-slate-500 block">{lang === "ja" ? "ターゲット層: " : "Audience: "}</span>
+                          <span className="text-slate-400 block pl-2 border-l border-slate-800 max-h-24 overflow-y-auto whitespace-pre-wrap leading-normal">{audiencePrompt}</span>
+                        </div>
+                      )}
+                    </div>
+                  </details>
                 </div>
 
               </aside>
