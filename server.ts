@@ -432,6 +432,8 @@ function getFallbackAiInfo(
     cleanDesc === ""
   ) {
     cleanDesc = "";
+  } else if (cleanDesc.length > 120) {
+    cleanDesc = cleanDesc.slice(0, 120) + "...";
   }
 
   if (isJa) {

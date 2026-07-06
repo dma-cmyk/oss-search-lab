@@ -651,7 +651,7 @@ export default function App() {
         observer.unobserve(currentObserverRef);
       }
     };
-  }, [trendingLoading, trendingLoadingMore, trendingHasMore, mode, trendingPage, resolvedLang, geminiApiKey, selectedModel, activePersona.prompt, activeAudience.prompt, searchSources]);
+  }, [trendingLoading, trendingLoadingMore, trendingHasMore, mode, trendingPage, resolvedLang, geminiApiKey, selectedModel, activePersona.prompt, activeAudience.prompt, searchSources, selectedRepo]);
 
   const handleOpenMagazine = () => {
     if (mode === "home") {
@@ -907,7 +907,7 @@ export default function App() {
         observer.unobserve(currentObserverRef);
       }
     };
-  }, [loading, loadingMore, hasMore, showBookmarks, mode, page, searchQuery, resolvedLang, searchMode]);
+  }, [loading, loadingMore, hasMore, showBookmarks, mode, page, searchQuery, resolvedLang, searchMode, selectedRepo]);
 
   const handleClearHistory = () => {
     saveHistory([]);
