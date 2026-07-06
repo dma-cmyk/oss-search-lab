@@ -401,7 +401,13 @@ function getFallbackAiInfo(
 ): { aiTitle: string; aiSummary: string; tags: string[] } {
   const isJa = (lang || "").startsWith("ja");
   
-  const isSister = personaPrompt && (personaPrompt.includes("あかり姉") || personaPrompt.includes("お姉ちゃん") || personaPrompt.includes("Cozy Big Sister"));
+  const isSister = personaPrompt && (
+    personaPrompt.includes("あかり姉") || 
+    personaPrompt.includes("お姉ちゃん") || 
+    personaPrompt.includes("お姉さん") || 
+    personaPrompt.includes("Cozy Big Sister") ||
+    personaPrompt.includes("ヴィーナス")
+  );
   const isNeet = audiencePrompt && (audiencePrompt.includes("自宅警備") || audiencePrompt.includes("ネット廃人") || audiencePrompt.includes("Net-Neet"));
   const isForumKid = audiencePrompt && (audiencePrompt.includes("なんJ") || audiencePrompt.includes("おんJ") || audiencePrompt.includes("キッズ") || audiencePrompt.includes("Forum Kid"));
   const isPM = audiencePrompt && (audiencePrompt.includes("PM") || audiencePrompt.includes("ハック") || audiencePrompt.includes("アジャイル") || audiencePrompt.includes("Hustler PM"));
@@ -940,7 +946,13 @@ Provide your analysis in ${languageName}.`;
     const isSummaryMissing = (page === 1) ? !parsedAI.summary : false;
     if (isSummaryMissing || !parsedAI.rankedItems || parsedAI.rankedItems.length === 0) {
       const isJa = (lang || "").startsWith("ja");
-      const isSister = personaPrompt && (personaPrompt.includes("あかり姉") || personaPrompt.includes("お姉ちゃん") || personaPrompt.includes("Cozy Big Sister"));
+       const isSister = personaPrompt && (
+        personaPrompt.includes("あかり姉") || 
+        personaPrompt.includes("お姉ちゃん") || 
+        personaPrompt.includes("お姉さん") || 
+        personaPrompt.includes("Cozy Big Sister") ||
+        personaPrompt.includes("ヴィーナス")
+      );
       const isNeet = audiencePrompt && (audiencePrompt.includes("自宅警備") || audiencePrompt.includes("ネット廃人") || audiencePrompt.includes("Net-Neet"));
       const isForumKid = audiencePrompt && (audiencePrompt.includes("なんJ") || audiencePrompt.includes("おんJ") || audiencePrompt.includes("キッズ") || audiencePrompt.includes("Forum Kid"));
       const isPM = audiencePrompt && (audiencePrompt.includes("PM") || audiencePrompt.includes("ハック") || audiencePrompt.includes("アジャイル") || audiencePrompt.includes("Hustler PM"));
@@ -1265,7 +1277,7 @@ Provide:
       systemInstruction += `
 
 Provide:
-1. Since this is an additional page (page ${page}) of trending repositories, set trendingSummary to an empty string ("").
+1. A brief 1-2 sentence overview summarizing these additional trending repositories (written in ${languageName}).
 2. For each repository, a highly engaging 1-sentence description/summary of why it is extremely popular/trending in ${languageName} and at least 5 highly creative and descriptive tags that reflect the technology itself, the style of the designated [STYLE DIRECTION / WRITER PERSONA], and are fully tailored to appeal to and fit the [TARGET AUDIENCE / INTENDED READERS] if specified. Make sure to generate at least 5 tags for each repository.`;
     }
     
@@ -1331,9 +1343,17 @@ Provide your executive trend analysis in ${languageName}.`;
       }
     }
 
-    if (!parsedAI.trendingSummary || !parsedAI.rankedItems || parsedAI.rankedItems.length === 0) {
+    // For page > 1, trendingSummary can be empty string ("")
+    const hasTrendingSummary = parsedAI.trendingSummary !== undefined && (page > 1 || parsedAI.trendingSummary !== "");
+    if (!hasTrendingSummary || !parsedAI.rankedItems || parsedAI.rankedItems.length === 0) {
       const isJa = (lang || "").startsWith("ja");
-      const isSister = personaPrompt && (personaPrompt.includes("あかり姉") || personaPrompt.includes("お姉ちゃん") || personaPrompt.includes("Cozy Big Sister"));
+      const isSister = personaPrompt && (
+        personaPrompt.includes("あかり姉") || 
+        personaPrompt.includes("お姉ちゃん") || 
+        personaPrompt.includes("お姉さん") || 
+        personaPrompt.includes("Cozy Big Sister") ||
+        personaPrompt.includes("ヴィーナス")
+      );
       const isNeet = audiencePrompt && (audiencePrompt.includes("自宅警備") || audiencePrompt.includes("ネット廃人") || audiencePrompt.includes("Net-Neet"));
       const isForumKid = audiencePrompt && (audiencePrompt.includes("なんJ") || audiencePrompt.includes("おんJ") || audiencePrompt.includes("キッズ") || audiencePrompt.includes("Forum Kid"));
       const isPM = audiencePrompt && (audiencePrompt.includes("PM") || audiencePrompt.includes("ハック") || audiencePrompt.includes("アジャイル") || audiencePrompt.includes("Hustler PM"));
@@ -1866,7 +1886,13 @@ function getDetailFallback(
   const isJa = (lang || "").startsWith("ja");
 
   // Determine active persona/audience from prompts to customize fallback voice
-  const isSister = personaPrompt && (personaPrompt.includes("あかり姉") || personaPrompt.includes("お姉ちゃん") || personaPrompt.includes("Cozy Big Sister"));
+  const isSister = personaPrompt && (
+    personaPrompt.includes("あかり姉") || 
+    personaPrompt.includes("お姉ちゃん") || 
+    personaPrompt.includes("お姉さん") || 
+    personaPrompt.includes("Cozy Big Sister") ||
+    personaPrompt.includes("ヴィーナス")
+  );
   const isNeet = audiencePrompt && (audiencePrompt.includes("自宅警備") || audiencePrompt.includes("ネット廃人") || audiencePrompt.includes("Net-Neet"));
   const isForumKid = audiencePrompt && (audiencePrompt.includes("なんJ") || audiencePrompt.includes("おんJ") || audiencePrompt.includes("キッズ") || audiencePrompt.includes("Forum Kid"));
   const isPM = audiencePrompt && (audiencePrompt.includes("PM") || audiencePrompt.includes("ハック") || audiencePrompt.includes("アジャイル") || audiencePrompt.includes("Hustler PM"));
