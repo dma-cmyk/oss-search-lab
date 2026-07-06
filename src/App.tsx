@@ -19,6 +19,7 @@ import {
   Trash2,
   Clock,
   Star,
+  Edit2,
 } from "lucide-react";
 import {
   Repository,
@@ -238,12 +239,25 @@ export default function App() {
   });
   const [showSavedReports, setShowSavedReports] = useState(false);
   const [expandedRepoId, setExpandedRepoId] = useState<string | null>(null);
+  const [editingArticleId, setEditingArticleId] = useState<string | null>(null);
+  const [editTitleValue, setEditTitleValue] = useState("");
 
   const handleSaveReport = (repo: Repository, detailData: RepoDetail) => {
     const repoKey = `${repo.id}_${repo.source || "github"}`;
+    
+    // Create clean default title from metadata
+    const modelName = selectedModel.replace("models/", "").replace("-latest", "");
+    const persona = activePersona?.name || (resolvedLang === "ja" ? "標準" : "Default");
+    const defaultTitle = detailData.title || (resolvedLang === "ja" 
+      ? `${modelName}による${persona}向け詳細解析` 
+      : `Detailed analysis by ${modelName} (${persona})`);
+
     const newArticle: SavedReportArticle = {
       id: `art_${Date.now()}`,
-      detail: detailData,
+      detail: {
+        ...detailData,
+        title: defaultTitle,
+      },
       savedAt: Date.now(),
       modelUsed: selectedModel,
       personaName: activePersona.name,
@@ -282,6 +296,28 @@ export default function App() {
       updated = [newReport, ...savedReports];
     }
 
+    setSavedReports(updated);
+    localStorage.setItem("oss_saved_reports_v2", JSON.stringify(updated));
+  };
+
+  const handleRenameArticle = (reportId: string, articleId: string, newTitle: string) => {
+    if (!newTitle.trim()) return;
+    const updated = savedReports.map((r) => {
+      if (r.id !== reportId) return r;
+      return {
+        ...r,
+        articles: r.articles.map((art) => {
+          if (art.id !== articleId) return art;
+          return {
+            ...art,
+            detail: {
+              ...art.detail,
+              title: newTitle,
+            },
+          };
+        }),
+      };
+    });
     setSavedReports(updated);
     localStorage.setItem("oss_saved_reports_v2", JSON.stringify(updated));
   };
@@ -1572,7 +1608,7 @@ export default function App() {
                                     )}
                                   </div>
                                   <p className="text-xs text-slate-500 line-clamp-2 mt-1 italic">
-                                    {report.repository?.description || "No description provided"}
+                                    {report.repository?.aiSummary || report.repository?.description || "No description provided"}
                                   </p>
                                 </div>
 
@@ -1635,7 +1671,19 @@ export default function App() {
                                           minute: "2-digit",
                                         }
                                       );
-                                      const articleTitle = article.detail?.title || (resolvedLang === "ja" ? "詳細解説レポート" : "Detailed Analysis Report");
+                                      
+                                      // Get formatted dynamic fallback title for old reports without an AI-generated title
+                                      const getFallbackTitle = () => {
+                                        if (article.detail?.title) return article.detail.title;
+                                        const model = article.modelUsed ? article.modelUsed.replace("models/", "").replace("-latest", "") : "AI";
+                                        const persona = article.personaName || (resolvedLang === "ja" ? "標準" : "Default");
+                                        return resolvedLang === "ja" 
+                                          ? `${model}による${persona}向け詳細解析` 
+                                          : `Detailed analysis by ${model} (${persona})`;
+                                      };
+                                      
+                                      const articleTitle = getFallbackTitle();
+                                      const isEditing = editingArticleId === article.id;
                                       
                                       return (
                                         <div 
@@ -1649,9 +1697,44 @@ export default function App() {
                                           }}
                                         >
                                           <div className="flex items-start justify-between gap-2">
-                                            <div className="font-bold text-xs text-slate-700 leading-snug group-hover/art:text-indigo-600 transition duration-150 flex-1 line-clamp-2">
-                                              {articleTitle}
-                                            </div>
+                                            {isEditing ? (
+                                              <input
+                                                type="text"
+                                                value={editTitleValue}
+                                                onChange={(e) => setEditTitleValue(e.target.value)}
+                                                onBlur={() => {
+                                                  handleRenameArticle(report.id, article.id, editTitleValue);
+                                                  setEditingArticleId(null);
+                                                }}
+                                                onKeyDown={(e) => {
+                                                  if (e.key === "Enter") {
+                                                    handleRenameArticle(report.id, article.id, editTitleValue);
+                                                    setEditingArticleId(null);
+                                                  } else if (e.key === "Escape") {
+                                                    setEditingArticleId(null);
+                                                  }
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="font-bold text-xs text-slate-700 bg-white border border-indigo-300 rounded px-2 py-0.5 w-full focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                                autoFocus
+                                              />
+                                            ) : (
+                                              <div className="font-bold text-xs text-slate-700 leading-snug group-hover/art:text-indigo-600 transition duration-150 flex-1 line-clamp-2 flex items-center gap-1.5">
+                                                <span>{articleTitle}</span>
+                                                <button
+                                                  type="button"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setEditingArticleId(article.id);
+                                                    setEditTitleValue(articleTitle);
+                                                  }}
+                                                  className="opacity-0 group-hover/art:opacity-100 p-0.5 rounded text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition cursor-pointer"
+                                                  title={resolvedLang === "ja" ? "タイトルを編集" : "Edit Title"}
+                                                >
+                                                  <Edit2 className="w-3 h-3" />
+                                                </button>
+                                              </div>
+                                            )}
                                             <button
                                               type="button"
                                               onClick={(e) => {
