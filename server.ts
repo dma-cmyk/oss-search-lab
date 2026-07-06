@@ -1159,6 +1159,7 @@ app.get("/api/repo", async (req, res) => {
 });
 
 // Trending endpoints Cache setup
+const trendingRawCache: Record<string, { repositories: any[]; timestamp: number }> = {};
 const trendingCache: Record<string, { data: any; timestamp: number }> = {};
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
@@ -1213,58 +1214,75 @@ app.get("/api/trending", async (req, res) => {
     }
     
     let githubItems: any[] = [];
-    
     let since = "daily";
     if (timeframe === "week") since = "weekly";
     if (timeframe === "month") since = "monthly";
-    const githubUrl = `https://github.com/trending?since=${since}`;
-    console.log(`Fetching trending repos from GitHub (page ${page}): ${githubUrl}`);
-    try {
-      const githubResponse = await fetch(githubUrl, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        },
-      });
-      if (!githubResponse.ok) {
-        console.log("GitHub HTML trending fetch error:", githubResponse.status);
-      } else {
-        const html = await githubResponse.text();
-        const $ = cheerio.load(html);
-        const allRepos: any[] = [];
-        $('article.Box-row').each((i: number, el: any) => {
-          const titleEl = $(el).find('h2.h3 a');
-          const href = titleEl.attr('href');
-          if (!href) return;
-          const full_name = href.replace(/^\//, '');
-          const description = $(el).find('p.col-9').text().trim();
-          const language = $(el).find('span[itemprop="programmingLanguage"]').text().trim();
-          const starsText = $(el).find('a[href$="/stargazers"]').first().text().trim().replace(/,/g, '');
-          const stargazers_count = parseInt(starsText, 10) || 0;
-          const ownerLogin = full_name.split('/')[0];
-          
-          allRepos.push({
-            id: full_name,
-            name: full_name.split('/')[1],
-            full_name,
-            description,
-            language,
-            stargazers_count,
-            owner: {
-              login: ownerLogin,
-              avatar_url: `https://github.com/${ownerLogin}.png`,
-              html_url: `https://github.com/${ownerLogin}`
-            },
-            html_url: `https://github.com/${full_name}`,
-            source: 'github'
-          });
+
+    const rawCacheKey = `github_raw_${timeframe}`.toLowerCase();
+    let allRepos: any[] = [];
+    const cachedRaw = trendingRawCache[rawCacheKey];
+
+    if (!bypassCache && cachedRaw && Date.now() - cachedRaw.timestamp < CACHE_TTL) {
+      console.log(`[TRENDING API] Serving raw repositories from cache for timeframe "${timeframe}". Count: ${cachedRaw.repositories.length}`);
+      allRepos = cachedRaw.repositories;
+    } else {
+      const githubUrl = `https://github.com/trending?since=${since}`;
+      console.log(`[TRENDING API] Fetching fresh raw trending repos from GitHub: ${githubUrl}`);
+      try {
+        const githubResponse = await fetch(githubUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept-Language": "en-US,en;q=0.9",
+          },
         });
-        
-        const startIdx = (page - 1) * 9;
-        githubItems = allRepos.slice(startIdx, startIdx + 9);
+        if (!githubResponse.ok) {
+          console.log("GitHub HTML trending fetch error:", githubResponse.status);
+        } else {
+          const html = await githubResponse.text();
+          const $ = cheerio.load(html);
+          $('article.Box-row').each((i: number, el: any) => {
+            const titleEl = $(el).find('h2.h3 a');
+            const href = titleEl.attr('href');
+            if (!href) return;
+            const full_name = href.replace(/^\//, '');
+            const description = $(el).find('p.col-9').text().trim();
+            const language = $(el).find('span[itemprop="programmingLanguage"]').text().trim();
+            const starsText = $(el).find('a[href$="/stargazers"]').first().text().trim().replace(/,/g, '');
+            const stargazers_count = parseInt(starsText, 10) || 0;
+            const ownerLogin = full_name.split('/')[0];
+            
+            allRepos.push({
+              id: full_name,
+              name: full_name.split('/')[1],
+              full_name,
+              description,
+              language,
+              stargazers_count,
+              owner: {
+                login: ownerLogin,
+                avatar_url: `https://github.com/${ownerLogin}.png`,
+                html_url: `https://github.com/${ownerLogin}`
+              },
+              html_url: `https://github.com/${full_name}`,
+              source: 'github'
+            });
+          });
+
+          if (allRepos.length > 0) {
+            trendingRawCache[rawCacheKey] = {
+              repositories: allRepos,
+              timestamp: Date.now(),
+            };
+            console.log(`[TRENDING API] Cached ${allRepos.length} raw trending repositories.`);
+          }
+        }
+      } catch (err) {
+        console.log("Error fetching GitHub trending:", err);
       }
-    } catch (err) {
-      console.log("Error fetching GitHub trending.");
     }
+
+    const startIdx = (page - 1) * 9;
+    githubItems = allRepos.slice(startIdx, startIdx + 9);
     
     let items: any[] = githubItems;
     
