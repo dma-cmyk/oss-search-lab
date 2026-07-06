@@ -243,6 +243,7 @@ export default function App() {
   const [editTitleValue, setEditTitleValue] = useState("");
 
   const handleSaveReport = (repo: Repository, detailData: RepoDetail) => {
+    if (!repo) return;
     const repoKey = `${repo.id}_${repo.source || "github"}`;
     
     // Create clean default title from metadata
@@ -264,22 +265,27 @@ export default function App() {
       audienceName: activeAudience.name,
     };
 
+    // Safe findIndex using optional chaining
     const existingIndex = savedReports.findIndex(
-      (r) => `${r.repository.id}_${r.repository.source || "github"}` === repoKey
+      (r) => r.repository && `${r.repository.id}_${r.repository.source || "github"}` === repoKey
     );
 
     let updated: SavedReport[];
     if (existingIndex > -1) {
       const target = savedReports[existingIndex];
-      const isDuplicate = target.articles.some(
-        (a) => JSON.stringify(a.detail) === JSON.stringify(detailData)
-      );
+      // Compare without title prop for duplicate check since saved article detail has the defaultTitle injected
+      const isDuplicate = target.articles?.some((a) => {
+        const { title: aTitle, ...aRest } = a.detail || {};
+        const { title: dTitle, ...dRest } = detailData || {};
+        return JSON.stringify(aRest) === JSON.stringify(dRest);
+      }) || false;
       
-      let updatedArticles = [...target.articles];
-      if (!isDuplicate) {
-        updatedArticles = [newArticle, ...updatedArticles];
+      if (isDuplicate) {
+        alert(resolvedLang === "ja" ? "このレポートはすでに保存されています。" : "This report is already saved.");
+        return;
       }
       
+      const updatedArticles = target.articles ? [newArticle, ...target.articles] : [newArticle];
       const updatedReport = {
         ...target,
         articles: updatedArticles,
@@ -298,6 +304,7 @@ export default function App() {
 
     setSavedReports(updated);
     localStorage.setItem("oss_saved_reports_v2", JSON.stringify(updated));
+    alert(resolvedLang === "ja" ? "マイライブラリに保存しました。" : "Saved to My Library.");
   };
 
   const handleRenameArticle = (reportId: string, articleId: string, newTitle: string) => {
