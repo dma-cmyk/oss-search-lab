@@ -29,6 +29,7 @@ import {
   AiEndpoint,
   PRESET_ENDPOINTS,
   SavedReport,
+  SavedReportArticle,
   RepoDetail } from "./types";
 import { PRESET_PERSONAS } from "./lib/personas";
 import { PRESET_AUDIENCES } from "./lib/audiences";
@@ -40,6 +41,57 @@ import RepoDetailView from "./components/RepoDetailView";
 import SearchHeader from "./components/SearchHeader";
 import SettingsModal from "./components/SettingsModal";
 import MagazineView from "./components/MagazineView";
+
+const migrateToArticlesStructure = (reports: any[]): SavedReport[] => {
+  const newReportsMap: Record<string, SavedReport> = {};
+
+  reports.forEach((item) => {
+    if (item.articles && Array.isArray(item.articles)) {
+      const repoKey = item.id || `${item.repository.id}_${item.repository.source || "github"}`;
+      if (!newReportsMap[repoKey]) {
+        newReportsMap[repoKey] = item;
+      } else {
+        const existingIds = new Set(newReportsMap[repoKey].articles.map(a => a.id));
+        item.articles.forEach((art: any) => {
+          if (!existingIds.has(art.id)) {
+            newReportsMap[repoKey].articles.push(art);
+          }
+        });
+      }
+      return;
+    }
+
+    const repo = item.repository;
+    if (!repo) return;
+    const repoKey = `${repo.id}_${repo.source || "github"}`;
+    const article: SavedReportArticle = {
+      id: item.id || `art_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      detail: item.detail,
+      savedAt: item.savedAt || Date.now(),
+      modelUsed: item.modelUsed,
+      personaName: item.personaName,
+      audienceName: item.audienceName,
+    };
+
+    if (!newReportsMap[repoKey]) {
+      newReportsMap[repoKey] = {
+        id: repoKey,
+        repository: repo,
+        articles: [article],
+      };
+    } else {
+      if (!newReportsMap[repoKey].articles.some((a) => a.id === article.id)) {
+        newReportsMap[repoKey].articles.push(article);
+      }
+    }
+  });
+
+  Object.values(newReportsMap).forEach(r => {
+    r.articles.sort((a, b) => b.savedAt - a.savedAt);
+  });
+
+  return Object.values(newReportsMap);
+};
 
 export default function App() {
   const [mode, setMode] = useState<"home" | "results">("home");
@@ -139,17 +191,20 @@ export default function App() {
   // Saved Reports States (Now SavedReport[])
   const [savedReports, setSavedReports] = useState<SavedReport[]>(() => {
     try {
-      // First try to load the new v2 array format
       const savedV2 = localStorage.getItem("oss_saved_reports_v2");
       if (savedV2) {
-        return JSON.parse(savedV2);
+        const parsed = JSON.parse(savedV2);
+        const migrated = migrateToArticlesStructure(parsed);
+        if (JSON.stringify(migrated) !== savedV2) {
+          localStorage.setItem("oss_saved_reports_v2", JSON.stringify(migrated));
+        }
+        return migrated;
       }
       
-      // Fallback: migrate from old v1 object format
       const savedV1 = localStorage.getItem("oss_saved_reports_v1");
       if (savedV1) {
         const parsedV1 = JSON.parse(savedV1) as Record<string, any>;
-        const migrated: SavedReport[] = Object.entries(parsedV1).map(([key, value], idx) => {
+        const oldV1Array = Object.entries(parsedV1).map(([key, value], idx) => {
           let savedTimestamp = Date.now();
           try {
             if (value.savedAt) {
@@ -166,7 +221,7 @@ export default function App() {
             modelUsed: value.modelUsed || "gemini-default",
           };
         });
-        
+        const migrated = migrateToArticlesStructure(oldV1Array);
         localStorage.setItem("oss_saved_reports_v2", JSON.stringify(migrated));
         return migrated;
       }
@@ -176,25 +231,77 @@ export default function App() {
     }
   });
   const [showSavedReports, setShowSavedReports] = useState(false);
+  const [expandedRepoId, setExpandedRepoId] = useState<string | null>(null);
 
   const handleSaveReport = (repo: Repository, detailData: RepoDetail) => {
-    const newReport: SavedReport = {
-      id: `report_${Date.now()}`,
-      repository: repo,
+    const repoKey = `${repo.id}_${repo.source || "github"}`;
+    const newArticle: SavedReportArticle = {
+      id: `art_${Date.now()}`,
       detail: detailData,
       savedAt: Date.now(),
       modelUsed: selectedModel,
       personaName: activePersona.name,
       audienceName: activeAudience.name,
     };
-    
-    const updated = [newReport, ...savedReports];
+
+    const existingIndex = savedReports.findIndex(
+      (r) => `${r.repository.id}_${r.repository.source || "github"}` === repoKey
+    );
+
+    let updated: SavedReport[];
+    if (existingIndex > -1) {
+      const target = savedReports[existingIndex];
+      const isDuplicate = target.articles.some(
+        (a) => JSON.stringify(a.detail) === JSON.stringify(detailData)
+      );
+      
+      let updatedArticles = [...target.articles];
+      if (!isDuplicate) {
+        updatedArticles = [newArticle, ...updatedArticles];
+      }
+      
+      const updatedReport = {
+        ...target,
+        articles: updatedArticles,
+      };
+      
+      updated = [...savedReports];
+      updated[existingIndex] = updatedReport;
+    } else {
+      const newReport: SavedReport = {
+        id: repoKey,
+        repository: repo,
+        articles: [newArticle],
+      };
+      updated = [newReport, ...savedReports];
+    }
+
     setSavedReports(updated);
     localStorage.setItem("oss_saved_reports_v2", JSON.stringify(updated));
   };
 
   const handleDeleteReport = (reportId: string) => {
     const updated = savedReports.filter((r) => r.id !== reportId);
+    setSavedReports(updated);
+    localStorage.setItem("oss_saved_reports_v2", JSON.stringify(updated));
+    if (expandedRepoId === reportId) {
+      setExpandedRepoId(null);
+    }
+  };
+
+  const handleDeleteArticle = (reportId: string, articleId: string) => {
+    const updated = savedReports
+      .map((r) => {
+        if (r.id === reportId) {
+          return {
+            ...r,
+            articles: r.articles.filter((a) => a.id !== articleId),
+          };
+        }
+        return r;
+      })
+      .filter((r) => r.articles.length > 0);
+
     setSavedReports(updated);
     localStorage.setItem("oss_saved_reports_v2", JSON.stringify(updated));
   };
@@ -954,7 +1061,7 @@ export default function App() {
           isBookmarked={bookmarks.some((b) => b.id === selectedRepo.id && b.source === selectedRepo.source)}
           onToggleBookmark={() => handleToggleBookmark(selectedRepo)}
           bypassCache={bypassCache}
-          savedDetail={selectedSavedReportDetail || savedReports.find(r => r.repository.id === selectedRepo.id && r.repository.source === selectedRepo.source)?.detail || null}
+          savedDetail={selectedSavedReportDetail}
           savedReports={savedReports}
           onSaveReport={(detailData) => handleSaveReport(selectedRepo, detailData)}
         />
@@ -1266,8 +1373,8 @@ export default function App() {
                       </div>
                     )}
                     
-                    {!trendingLoadingMore && trendingHasMore && (
-                      <div ref={trendingObserverRef} className="h-6 w-full animate-pulse" id="trending-infinite-scroll-trigger" />
+                    {trendingHasMore && (
+                      <div ref={trendingObserverRef} className="h-2 w-full opacity-0" id="trending-infinite-scroll-trigger" />
                     )}
 
                     {!trendingHasMore && trendingRepos.length > 0 && (
@@ -1431,104 +1538,131 @@ export default function App() {
                         </div>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="library-cards-grid">
+                      <div className="grid grid-cols-1 gap-6" id="library-cards-grid">
                         {savedReports.map((report) => {
-                          const isBookmarked = bookmarks.some((b) => b.id === report.repository.id && b.source === report.repository.source);
-                          const formattedDate = new Date(report.savedAt).toLocaleString(
-                            resolvedLang === "ja" ? "ja-JP" : "en-US",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          );
+                          const isExpanded = expandedRepoId === report.id;
+                          const articlesCount = report.articles ? report.articles.length : 0;
+                          
                           return (
                             <div 
                               key={report.id}
-                              className="bg-white border border-slate-150 rounded-3xl p-5 hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col justify-between h-full relative group overflow-hidden cursor-pointer"
-                              onClick={() => {
-                                setSelectedRepo(report.repository);
-                                setSelectedSavedReportDetail(report.detail);
-                              }}
+                              className="bg-white border border-slate-150 rounded-3xl p-5 hover:shadow-md transition duration-300 relative group overflow-hidden"
                             >
-                              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 to-purple-600" />
+                              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-600" />
                               
-                              <div className="space-y-4">
-                                <div className="flex items-center justify-between text-[10px] font-semibold text-slate-400">
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="w-3 h-3 text-slate-300" />
-                                    {formattedDate}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteReport(report.id);
-                                    }}
-                                    className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition cursor-pointer"
-                                    title={resolvedLang === "ja" ? "レポートを削除" : "Delete Report"}
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-
-                                <div>
-                                  <h4 className="font-black text-slate-800 text-base leading-snug group-hover:text-indigo-600 transition">
-                                    {report.repository.fullName}
-                                  </h4>
-                                  <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="space-y-1.5 flex-1 cursor-pointer" onClick={() => setExpandedRepoId(isExpanded ? null : report.id)}>
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="font-black text-slate-800 text-base leading-snug hover:text-indigo-600 transition">
+                                      {report.repository.fullName}
+                                    </h4>
+                                    <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg text-[10px] font-bold">
+                                      {resolvedLang === "ja" ? `レポート ${articlesCount} 件` : `${articlesCount} Reports`}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-slate-400 line-clamp-1">
                                     {report.repository.description || "No description provided"}
                                   </p>
                                 </div>
 
-                                {/* Metadata Badges */}
-                                <div className="flex flex-wrap gap-1.5">
-                                  {report.modelUsed && (
-                                    <span className="bg-slate-50 border border-slate-200/60 text-slate-500 px-2 py-0.5 rounded-lg text-[9px] font-bold tracking-tight">
-                                      🤖 {report.modelUsed.replace("models/", "")}
-                                    </span>
-                                  )}
-                                  {report.personaName && (
-                                    <span className="bg-indigo-50/50 border border-indigo-100/50 text-indigo-600/80 px-2 py-0.5 rounded-lg text-[9px] font-bold tracking-tight">
-                                      👤 {report.personaName}
-                                    </span>
-                                  )}
-                                  {report.audienceName && (
-                                    <span className="bg-purple-50/50 border border-purple-100/50 text-purple-600/80 px-2 py-0.5 rounded-lg text-[9px] font-bold tracking-tight">
-                                      🎯 {report.audienceName}
-                                    </span>
-                                  )}
+                                <div className="flex items-center gap-3">
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedRepoId(isExpanded ? null : report.id)}
+                                    className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer transition flex items-center gap-1"
+                                  >
+                                    {isExpanded 
+                                      ? (resolvedLang === "ja" ? "閉じる" : "Close") 
+                                      : (resolvedLang === "ja" ? "レポート一覧を見る" : "View Reports")}
+                                    <ChevronDown className={`w-3.5 h-3.5 transition duration-200 ${isExpanded ? "rotate-180 text-indigo-500" : ""}`} />
+                                  </button>
+                                  
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteReport(report.id)}
+                                    className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition cursor-pointer"
+                                    title={resolvedLang === "ja" ? "このリポジトリをライブラリから削除" : "Delete entire repository from library"}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
                                 </div>
+                              </div>
 
-                                {report.detail.aiEvaluation && (
-                                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 text-[10px] text-slate-500 italic leading-relaxed line-clamp-3">
-                                    "{report.detail.aiEvaluation}"
+                              {/* Articles List inside Accordion */}
+                              {isExpanded && report.articles && (
+                                <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
+                                  <h5 className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">
+                                    {resolvedLang === "ja" ? "保存された解析レポート一覧" : "Saved Analysis Reports"}
+                                  </h5>
+                                  <div className="space-y-2">
+                                    {report.articles.map((article) => {
+                                      const formattedDate = new Date(article.savedAt).toLocaleString(
+                                        resolvedLang === "ja" ? "ja-JP" : "en-US",
+                                        {
+                                          year: "numeric",
+                                          month: "short",
+                                          day: "numeric",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        }
+                                      );
+                                      return (
+                                        <div 
+                                          key={article.id}
+                                          className="p-3 bg-slate-50 hover:bg-indigo-50/40 border border-slate-150 rounded-2xl flex items-center justify-between cursor-pointer transition group/art"
+                                          onClick={() => {
+                                            setSelectedRepo(report.repository);
+                                            setSelectedSavedReportDetail(article.detail);
+                                          }}
+                                        >
+                                          <div className="flex flex-col gap-1 flex-1">
+                                            <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                                              <span className="flex items-center gap-1 font-semibold">
+                                                <Clock className="w-3 h-3 text-slate-300" />
+                                                {formattedDate}
+                                              </span>
+                                            </div>
+                                            <div className="flex flex-wrap gap-1.5 items-center mt-1">
+                                              {article.modelUsed && (
+                                                <span className="bg-white border border-slate-200 text-slate-500 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-tight">
+                                                  🤖 {article.modelUsed.replace("models/", "")}
+                                                </span>
+                                              )}
+                                              {article.personaName && (
+                                                <span className="bg-indigo-50 border border-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-tight">
+                                                  👤 {article.personaName}
+                                                </span>
+                                              )}
+                                              {article.audienceName && (
+                                                <span className="bg-purple-50 border border-purple-100 text-purple-600 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-tight">
+                                                  🎯 {article.audienceName}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                          
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-bold text-indigo-600 group-hover/art:translate-x-1 transition duration-200 flex items-center">
+                                              {resolvedLang === "ja" ? "レポートを読む" : "Read Report"} →
+                                            </span>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteArticle(report.id, article.id);
+                                              }}
+                                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition cursor-pointer"
+                                              title={resolvedLang === "ja" ? "この記事を削除" : "Delete Article"}
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
-                                )}
-                              </div>
-
-                              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleToggleBookmark(report.repository);
-                                  }}
-                                  className="text-slate-400 hover:text-amber-500 transition cursor-pointer p-1 rounded-lg hover:bg-slate-50"
-                                  title={isBookmarked ? "お気に入りから削除" : "お気に入りに追加"}
-                                >
-                                  <BookOpen className={`w-4 h-4 ${isBookmarked ? "fill-amber-400 text-amber-500" : ""}`} />
-                                </button>
-                                
-                                <div
-                                  className="flex items-center space-x-1 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] rounded-full transition shadow-sm cursor-pointer ml-auto"
-                                >
-                                  <span>{resolvedLang === "ja" ? "レポートを読む" : "Read Report"}</span>
-                                  <ArrowRight className="w-3 h-3" />
                                 </div>
-                              </div>
+                              )}
                             </div>
                           );
                         })}

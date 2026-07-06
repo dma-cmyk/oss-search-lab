@@ -58,14 +58,19 @@ export interface SearchHistoryItem {
   timestamp: number;
 }
 
-export interface SavedReport {
+export interface SavedReportArticle {
   id: string;
-  repository: Repository;
   detail: RepoDetail;
   savedAt: number;
   modelUsed?: string;
   personaName?: string;
   audienceName?: string;
+}
+
+export interface SavedReport {
+  id: string;
+  repository: Repository;
+  articles: SavedReportArticle[];
 }
 
 export interface LanguageOption {

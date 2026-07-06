@@ -74,7 +74,7 @@ export default function RepoDetailView({
     ? savedReports.some(
         (r) =>
           r.repository.fullName.toLowerCase() === repository.fullName.toLowerCase() &&
-          JSON.stringify(r.detail) === JSON.stringify(detail)
+          r.articles.some((art) => JSON.stringify(art.detail) === JSON.stringify(detail))
       )
     : false;
 
@@ -108,7 +108,7 @@ export default function RepoDetailView({
     return text.replace(/Gemini/g, modelName).replace(/gemini/g, modelName);
   };
 
-  const fetchDetail = async () => {
+  const fetchDetail = async (forceBypass: boolean = false) => {
     console.log("[DEBUG DETAIL VIEW] fetchDetail called. selectedModel prop is:", selectedModel);
     setDetail(null);
     setError(null);
@@ -122,7 +122,7 @@ export default function RepoDetailView({
       headers["x-ai-provider"] = activeEndpoint.type;
       headers["x-ai-endpoint"] = activeEndpoint.url;
       if (selectedModel) headers["x-gemini-model"] = selectedModel;
-      if (bypassCache) headers["x-bypass-cache"] = "true";
+      if (bypassCache || forceBypass) headers["x-bypass-cache"] = "true";
 
       const response = await fetch("/api/detail", {
         method: "POST",
@@ -262,6 +262,17 @@ export default function RepoDetailView({
           >
             <BookMarked className={`w-4 h-4 shrink-0 ${isBookmarked ? "fill-amber-500 text-amber-600" : "text-slate-400"}`} />
             <span className="hidden sm:inline ml-1.5">{isBookmarked ? (lang === "ja" ? "お気に入り中" : "Bookmarked") : (lang === "ja" ? "お気に入りに追加" : "Add to Bookmarks")}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => fetchDetail(true)}
+            disabled={loading}
+            className="p-2 sm:px-4 sm:py-2 rounded-full border text-xs font-bold flex items-center justify-center transition cursor-pointer w-8.5 h-8.5 sm:w-auto bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50"
+            title={lang === "ja" ? "AIで詳細解析を再生成" : "Regenerate detailed analysis with AI"}
+          >
+            <RefreshCw className={`w-4 h-4 shrink-0 text-slate-400 ${loading ? "animate-spin text-indigo-500" : ""}`} />
+            <span className="hidden sm:inline ml-1.5">{lang === "ja" ? "再解析" : "Regenerate"}</span>
           </button>
 
           {detail && onSaveReport && (
