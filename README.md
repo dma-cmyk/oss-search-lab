@@ -1,28 +1,62 @@
-# OSS SearchLab
+# 💠 OSS SearchLab (オープンソース・サーチラボ)
 
-OSS SearchLab is a powerful, AI-driven search engine designed for discovering and analyzing open source repositories across the globe. By leveraging the Gemini AI API, OSS SearchLab not only finds the best tools, libraries, and frameworks on platforms like GitHub but also summarizes, categorizes, and provides deep insights into them—all customized for your preferred language and context.
+> **Gemini AIがあなたの開発パートナーになる、次世代のOSS（オープンソース）検索・分析エンジン！**
 
-## Key Features
+GitHubやGitLabに眠る膨大なオープンソースプロジェクトの中から、あなたにピッタリなものをGemini AIの力を借りて爆速で見つけ出し、要約・分析するフルスタックWebアプリケーションよ♡
 
-- **AI-Powered Search & Insights**: Understand at a glance what a repository does and why it's popular through concise, intelligent summaries.
-- **Trending Repositories**: Discover the most active and trending open source projects daily, weekly, or monthly, complete with AI executive briefs.
-- **Deep Dive Reports**: Generate in-depth architectural and usage analysis for any repository, comparing it to alternatives, understanding its tech stack, and more.
-- **Multi-language Support**: Search and view AI-generated insights naturally translated into multiple languages (e.g., English, Japanese, German, Spanish, French, Chinese).
-- **Persona & Audience Targeting**: Customize the AI's tone (e.g., "Cozy Big Sister", "Hustler PM", "Net-Neet") to receive insights perfectly tuned for your context and humor.
-- **Built-in Bookmarks**: Easily save your favorite repositories to review them later.
+---
 
-## Architecture & Tech Stack
+## 🌟 なにができるの？ (主な機能)
 
-This is a modern full-stack web application built with:
+* **🔍 AIによる検索キーワードの最適化**
+  「状態管理」や「アニメーション」といった日本語や曖昧な言葉で検索しても、Geminiが自動的に最適な英語の技術キーワードに変換して、GitHubとGitLabの両方から最適なリポジトリを横断検索するわ。
+  
+* **📝 個性豊かなAI要約 (aiSummary)**
+  リポジトリ一覧に、Geminiが書いたキャッチーな1行紹介文と特徴タグが表示されるの。しかも、設定した「ペルソナ（あかり姉、なんJ民、戦略的PMなど）」に合わせて紹介のトーンやツッコミが変わる楽しい機能付きよ♡
+  
+* **📊 詳細ディープダイブ報告 (Deep Dive Reports)**
+  気になるリポジトリをワンクリックするだけで、詳細なアーキテクチャ設計、主なユースケース、メリット・デメリット、競合ツールとの比較、さらにはREADME画像まで整理した本格的な分析レポートをGeminiが爆速で生成してくれるわ。
+  
+* **💖 ブックマーク＆履歴機能**
+  お気に入りのリポジトリはワンクリックでブックマークに保存して、いつでも簡単に見返せる安心設計よ。
 
-- **Frontend**: React 18, Vite, Tailwind CSS, and Lucide Icons.
-- **Backend**: Express (Node.js) server acting as a proxy and orchestrator for GitHub API and Gemini API.
-- **AI Integration**: The `@google/genai` TypeScript SDK is used for robust, structured output generation, leveraging the Gemini 3.5 capabilities securely on the server.
-- **Styling**: Tailwind CSS for responsive, mobile-first design, adhering to modern UI/UX craftsmanship.
+---
 
-## Getting Started
+## 🛠️ 技術スタック (Tech Stack)
 
-1. Set your `GEMINI_API_KEY` in the environment (`.env`).
-2. Run `npm install` to install dependencies.
-3. Run `npm run dev` to start the development server.
-4. Enjoy exploring the open source ecosystem with AI!
+美緒ちゃんが快適に開発・カスタマイズできるように、最高にモダンな構成にしておいたわ。
+
+* **フロントエンド (Client)**: React (v19), Vite, Tailwind CSS (v4), Lucide Icons
+* **バックエンド (Server)**: Express (Node.js) サーバー（APIプロキシ兼Gemini APIオーケストレーター）
+* **AI統合 (AI)**: `@google/genai` TypeScript SDK (Gemini 3.5 モデルを安全に活用)
+
+---
+
+## 🚀 動かし方 (Getting Started)
+
+### 1. 環境変数の設定
+プロジェクトのルートディレクトリに `.env` ファイルを作成し、Gemini APIキーを設定してね（`.env.example` を参考にしてみてね）。
+```env
+GEMINI_API_KEY=あなたのAPIキーをここに貼り付けてね
+```
+
+### 2. 依存パッケージのインストール
+```bash
+npm install
+```
+
+### 3. 開発サーバーの起動
+```bash
+npm run dev
+```
+これで開発サーバーが起動し、ブラウザから `http://localhost:3101` でアクセスできるようになるわ！
+
+### 4. 本番ビルドと起動
+```bash
+npm run build
+npm start
+```
+
+---
+美緒ちゃんの開発ライフがもっと楽しくなりますように♪
+
