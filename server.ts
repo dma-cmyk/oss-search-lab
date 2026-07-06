@@ -1110,6 +1110,54 @@ Provide your analysis in ${languageName}.`;
   }
 });
 
+app.get("/api/repo", async (req, res) => {
+  try {
+    const source = (req.query.source as string) || "github";
+    const name = req.query.name as string;
+
+    if (!name || name.trim() === "") {
+      return res.status(400).json({ error: "Parameter 'name' is required" });
+    }
+
+    if (source === "gitlab") {
+      const gitlabUrl = `https://gitlab.com/api/v4/projects/${encodeURIComponent(name)}`;
+      console.log(`[API REPO] Fetching GitLab repo: "${name}" using URL: ${gitlabUrl}`);
+      const gitlabResponse = await fetch(gitlabUrl, {
+        headers: { "User-Agent": "OSS-Search-Lab-App-v1" },
+      });
+      if (!gitlabResponse.ok) {
+        throw new Error(`GitLab API error: ${gitlabResponse.status}`);
+      }
+      const data = await gitlabResponse.json();
+      return res.json(data);
+    } else {
+      const githubUrl = `https://api.github.com/repos/${name}`;
+      console.log(`[API REPO] Fetching GitHub repo: "${name}" using URL: ${githubUrl}`);
+      const githubHeaders: Record<string, string> = {
+        "User-Agent": "OSS-Search-Lab-App-v1",
+        Accept: "application/vnd.github.v3+json",
+      };
+      if (process.env.GITHUB_TOKEN) {
+        githubHeaders["Authorization"] = `token ${process.env.GITHUB_TOKEN}`;
+      }
+      const githubResponse = await fetch(githubUrl, {
+        headers: githubHeaders,
+      });
+      if (!githubResponse.ok) {
+        throw new Error(`GitHub API error: ${githubResponse.status}`);
+      }
+      const data = await githubResponse.json();
+      return res.json(data);
+    }
+  } catch (err: any) {
+    console.error("[API REPO] Error:", err.message || err);
+    return res.status(500).json({
+      error: "An error occurred while fetching repository metadata.",
+      details: err.message || err,
+    });
+  }
+});
+
 // Trending endpoints Cache setup
 const trendingCache: Record<string, { data: any; timestamp: number }> = {};
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
