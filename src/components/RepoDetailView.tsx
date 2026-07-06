@@ -73,8 +73,8 @@ export default function RepoDetailView({
   const isSaved = detail
     ? savedReports.some(
         (r) =>
-          r.repository.fullName.toLowerCase() === repository.fullName.toLowerCase() &&
-          r.articles.some((art) => JSON.stringify(art.detail) === JSON.stringify(detail))
+          r.repository?.fullName?.toLowerCase() === repository?.fullName?.toLowerCase() &&
+          r.articles?.some((art) => JSON.stringify(art.detail) === JSON.stringify(detail))
       )
     : false;
 

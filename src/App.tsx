@@ -18,6 +18,7 @@ import {
   X,
   Trash2,
   Clock,
+  Star,
 } from "lucide-react";
 import {
   Repository,
