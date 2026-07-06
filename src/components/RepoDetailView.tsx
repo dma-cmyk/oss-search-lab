@@ -685,15 +685,40 @@ export default function RepoDetailView({
             </div>
           </div>
           
-          <a
-            href={repository.htmlUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-6 py-3 bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs rounded-full shadow-sm transition flex items-center justify-center space-x-2 shrink-0 cursor-pointer"
-          >
-            {repository.source === "gitlab" ? <Gitlab className="w-4 h-4" /> : <Github className="w-4 h-4" />}
-            <span>{repository.source === "gitlab" ? (lang === "ja" ? "GitLabでコードを見る" : "View Code on GitLab") : t.viewCodeOnGithub}</span>
-          </a>
+          <div className="flex flex-wrap gap-3 items-center w-full sm:w-auto">
+            {repository.source !== "gitlab" && (
+              <>
+                <a
+                  href={`https://deepwiki.com/gh/${repository.fullName}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-full border border-indigo-100 transition flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer"
+                  title="Analyze repository on DeepWiki"
+                >
+                  <span>🧠 DeepWiki</span>
+                </a>
+                <a
+                  href={`https://codewiki.google/github.com/${repository.fullName}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-full border border-emerald-100 transition flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer"
+                  title="Generate documentation on Google Code Wiki"
+                >
+                  <span>🤖 CodeWiki</span>
+                </a>
+              </>
+            )}
+            
+            <a
+              href={repository.htmlUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-3 bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs rounded-full shadow-sm transition flex items-center justify-center space-x-2 shrink-0 cursor-pointer"
+            >
+              {repository.source === "gitlab" ? <Gitlab className="w-4 h-4" /> : <Github className="w-4 h-4" />}
+              <span>{repository.source === "gitlab" ? (lang === "ja" ? "GitLabでコードを見る" : "View Code on GitLab") : t.viewCodeOnGithub}</span>
+            </a>
+          </div>
         </footer>
 
           </div>
