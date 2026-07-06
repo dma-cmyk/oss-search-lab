@@ -246,12 +246,10 @@ export default function App() {
     if (!repo) return;
     const repoKey = `${repo.id}_${repo.source || "github"}`;
     
-    // Create clean default title from metadata
-    const modelName = selectedModel.replace("models/", "").replace("-latest", "");
-    const persona = activePersona?.name || (resolvedLang === "ja" ? "標準" : "Default");
-    const defaultTitle = detailData.title || (resolvedLang === "ja" 
-      ? `${modelName}による${persona}向け詳細解析` 
-      : `Detailed analysis by ${modelName} (${persona})`);
+    // Create clean default title from editorial article headline style
+    const defaultTitle = resolvedLang === "ja" 
+      ? `世界を熱狂させる「${repo.fullName}」の正体に迫る。その圧倒的ポテンシャルと現実的な技術制約` 
+      : `Inside ${repo.fullName}: Architectural Auditing, Operational Trade-offs, and Developer Verdict`;
 
     const newArticle: SavedReportArticle = {
       id: `art_${Date.now()}`,
@@ -1592,8 +1590,8 @@ export default function App() {
                           const isExpanded = expandedRepoId === report.id;
                           const articlesCount = report.articles ? report.articles.length : 0;
                           
-                          // Display name based on selected language (aiTitle) or fallbacks
-                          const displayTitle = report.repository?.aiTitle || report.articles?.[0]?.detail?.title || report.repository?.fullName || "Unknown Repository";
+                          // Display name is simply the repository full name (e.g. Leonxlnx/taste-skill)
+                          const displayTitle = report.repository?.fullName || "Unknown Repository";
                           
                           return (
                             <div 
@@ -1608,11 +1606,6 @@ export default function App() {
                                     <h4 className="font-black text-slate-800 text-base leading-snug hover:text-indigo-600 transition truncate">
                                       {displayTitle}
                                     </h4>
-                                    {displayTitle !== report.repository?.fullName && report.repository?.fullName && (
-                                      <span className="text-[10px] text-slate-400 font-mono font-bold tracking-tight truncate">
-                                        {report.repository.fullName}
-                                      </span>
-                                    )}
                                   </div>
                                   <p className="text-xs text-slate-500 line-clamp-2 mt-1 italic">
                                     {report.repository?.aiSummary || report.repository?.description || "No description provided"}
@@ -1679,14 +1672,13 @@ export default function App() {
                                         }
                                       );
                                       
-                                      // Get formatted dynamic fallback title for old reports without an AI-generated title
+                                      // Get formatted dynamic fallback title for old reports using the editorial article headline style
                                       const getFallbackTitle = () => {
                                         if (article.detail?.title) return article.detail.title;
-                                        const model = article.modelUsed ? article.modelUsed.replace("models/", "").replace("-latest", "") : "AI";
-                                        const persona = article.personaName || (resolvedLang === "ja" ? "標準" : "Default");
+                                        const fullName = report.repository?.fullName || "Unknown";
                                         return resolvedLang === "ja" 
-                                          ? `${model}による${persona}向け詳細解析` 
-                                          : `Detailed analysis by ${model} (${persona})`;
+                                          ? `世界を熱狂させる「${fullName}」の正体に迫る。その圧倒的ポテンシャルと現実的な技術制約` 
+                                          : `Inside ${fullName}: Architectural Auditing, Operational Trade-offs, and Developer Verdict`;
                                       };
                                       
                                       const articleTitle = getFallbackTitle();
