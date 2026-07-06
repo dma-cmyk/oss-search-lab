@@ -42,6 +42,7 @@ export interface RepoDetailAlternative {
 }
 
 export interface RepoDetail {
+  title?: string;
   overview: string;
   features: string[];
   useCases: string[];

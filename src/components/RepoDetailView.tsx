@@ -148,6 +148,7 @@ export default function RepoDetailView({
       
       // Fully sanitize the detail data to ensure arrays and properties exist before rendering
       const sanitized = {
+        title: typeof data.title === "string" ? data.title : "",
         overview: typeof data.overview === "string" ? data.overview : "",
         features: Array.isArray(data.features) ? data.features : [],
         useCases: Array.isArray(data.useCases) ? data.useCases : [],

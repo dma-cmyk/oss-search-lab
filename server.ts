@@ -2575,6 +2575,10 @@ CRITICAL MEDIA SELECTING AND EMBEDDING RULES (AI JUDGMENT MANDATE):
     const responseSchema = {
           type: Type.OBJECT,
           properties: {
+            title: {
+              type: Type.STRING,
+              description: "A short, engaging title summarizing this repository analysis in the requested language (e.g. 'パラキート/Whisper搭載の革新的AI会議アシスタント' or 'A Revolutionary Local-first AI Assistant'). Do not output any HTML/Markdown, just a plain text title.",
+            },
             overview: {
               type: Type.STRING,
               description: "A comprehensive overview of what this library is, its origin, and why it's popular. You MUST use Markdown. Using your AI judgment, select the most relevant screenshots or demo videos from the provided candidate lists and organically embed them using ![alt](url) and <video src=\"url\"></video>.",
@@ -2625,7 +2629,7 @@ CRITICAL MEDIA SELECTING AND EMBEDDING RULES (AI JUDGMENT MANDATE):
               description: "Array of up to 4 selected image URLs from the Candidate README Images that represent the main screenshots or diagrams.",
             }
           },
-          required: ["overview", "features", "useCases", "pros", "cons", "gettingStarted", "alternatives", "aiEvaluation", "readmeImages"],
+          required: ["title", "overview", "features", "useCases", "pros", "cons", "gettingStarted", "alternatives", "aiEvaluation", "readmeImages"],
         };
     
     let responseText = await callAiContent(req, prompt, systemInstruction, responseSchema, undefined, imageParts);
