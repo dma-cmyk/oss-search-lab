@@ -363,6 +363,26 @@ export default function App() {
   const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null);
   const [selectedSavedReportDetail, setSelectedSavedReportDetail] = useState<RepoDetail | null>(null);
   const [isHeaderLangOpen, setIsHeaderLangOpen] = useState(false);
+  
+  const [savedScrollPosition, setSavedScrollPosition] = useState(0);
+
+  const handleOpenRepoDetail = (repo: Repository | null) => {
+    if (repo) {
+      setSavedScrollPosition(window.scrollY);
+    }
+    setSelectedRepo(repo);
+  };
+
+  // Restore scroll position when returning from detail view
+  useEffect(() => {
+    if (!selectedRepo && savedScrollPosition > 0) {
+      const timer = setTimeout(() => {
+        window.scrollTo(0, savedScrollPosition);
+        setSavedScrollPosition(0);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedRepo, savedScrollPosition]);
   const [isHomeLangOpen, setIsHomeLangOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -1120,6 +1140,49 @@ export default function App() {
           savedDetail={selectedSavedReportDetail}
           savedReports={savedReports}
           onSaveReport={(detailData) => handleSaveReport(selectedRepo, detailData)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+        />
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          customEndpoints={customEndpoints}
+          onUpdateCustomEndpoints={(endpoints) => {
+            setCustomEndpoints(endpoints);
+            localStorage.setItem("oss_custom_endpoints_v1", JSON.stringify(endpoints));
+          }}
+          selectedEndpointId={selectedEndpointId}
+          onSelectEndpointId={(id) => {
+            setSelectedEndpointId(id);
+            localStorage.setItem("oss_selected_endpoint_id_v1", id);
+            // Auto refresh models when endpoint changes
+            setTimeout(() => fetchModelsList(), 0);
+          }}
+          onClose={() => setIsSettingsOpen(false)}
+          apiKey={geminiApiKey}
+          onSaveApiKey={handleSaveApiKey}
+          selectedModel={selectedModel}
+          onSelectModel={handleSelectModel}
+          availableModels={availableModels}
+          loading={modelsLoading}
+          error={modelsError}
+          bypassCache={bypassCache}
+          onToggleBypassCache={(val) => {
+            setBypassCache(val);
+            localStorage.setItem("oss_bypass_cache_v1", String(val));
+          }}
+          onRefreshModels={(key) => fetchModelsList(key)}
+          lang={resolvedLang}
+          selectedPersonaId={selectedPersonaId}
+          onSelectPersonaId={handleSelectPersonaId}
+          customPersonas={customPersonas}
+          onUpdateCustomPersonas={handleUpdateCustomPersonas}
+          selectedAudienceId={selectedAudienceId}
+          onSelectAudienceId={handleSelectAudienceId}
+          customAudiences={customAudiences}
+          onUpdateCustomAudiences={handleUpdateCustomAudiences}
+          searchSources={searchSources}
+          onSearchSourcesChange={setSearchSources}
+          trendingTimeframe={trendingTimeframe}
+          onTrendingTimeframeChange={setTrendingTimeframe}
         />
       </div>
     );
@@ -1408,7 +1471,7 @@ export default function App() {
                           key={`${repo.source}_${repo.id}`}
                           repository={repo}
                           rank={index + 1}
-                          onDeepDive={setSelectedRepo}
+                          onDeepDive={handleOpenRepoDetail}
                           isBookmarked={isBookmarked}
                           onToggleBookmark={handleToggleBookmark}
                           lang={resolvedLang}
@@ -1705,7 +1768,7 @@ export default function App() {
                                           className="p-3 bg-slate-50 hover:bg-indigo-50/40 border border-slate-150 rounded-2xl flex flex-col gap-2 cursor-pointer transition group/art relative text-left"
                                           onClick={() => {
                                             if (report.repository) {
-                                              setSelectedRepo(report.repository);
+                                              handleOpenRepoDetail(report.repository);
                                               setSelectedSavedReportDetail(article.detail);
                                             }
                                           }}
@@ -1830,7 +1893,7 @@ export default function App() {
                                 key={`${repo.source}_${repo.id}`}
                                 repository={repo}
                                 rank={index + 1}
-                                onDeepDive={setSelectedRepo}
+                                onDeepDive={handleOpenRepoDetail}
                                 isBookmarked={isBookmarked}
                                 onToggleBookmark={handleToggleBookmark}
                                 lang={resolvedLang}

@@ -24,6 +24,7 @@ import {
   Link as LinkIcon,
   Save,
   Cpu,
+  Settings,
 } from "lucide-react";
 import { Repository, RepoDetail, SavedReport } from "../types";
 import { getUITranslations } from "../lib/translations";
@@ -46,6 +47,7 @@ interface RepoDetailViewProps {
   savedDetail?: RepoDetail | null;
   savedReports: SavedReport[];
   onSaveReport?: (detail: RepoDetail) => void;
+  onOpenSettings: () => void;
 }
 
 export default function RepoDetailView({
@@ -63,6 +65,7 @@ export default function RepoDetailView({
   savedDetail = null,
   savedReports,
   onSaveReport,
+  onOpenSettings,
 }: RepoDetailViewProps) {
   const [loading, setLoading] = useState(false);
   const [detail, setDetail] = useState<RepoDetail | null>(savedDetail);
@@ -228,6 +231,16 @@ export default function RepoDetailView({
 
         {/* Action Controls */}
         <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            className="p-2 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer flex items-center justify-center w-8.5 h-8.5 sm:w-9 sm:h-9"
+            title={lang === "ja" ? "設定を開く" : "Settings"}
+            id="detail-settings-btn"
+          >
+            <Settings className="w-4 h-4 text-slate-400" />
+          </button>
+
           <button
             type="button"
             onClick={handleCopyLink}
