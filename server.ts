@@ -775,8 +775,8 @@ Return ONLY the raw optimized search query string. Do not include any quotes, ex
       const isJa = (lang || "").startsWith("ja"); 
       const isMobile = req.query.isMobile === "true";
       
-      // If mobile and Japanese, translate description using Gemini
-      if (isMobile && isJa && items.length > 0 && hasApiKey) {
+      // If Japanese, translate description using Gemini (PC & Mobile)
+      if (isJa && items.length > 0 && hasApiKey) {
         try {
           const toTranslate = items
             .map((item, idx) => ({
