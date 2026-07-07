@@ -2,6 +2,7 @@ import React from "react";
 import { BookOpen } from "lucide-react";
 import { AISearchSummary } from "../types";
 import { getUITranslations } from "../lib/translations";
+import CustomMarkdown from "./CustomMarkdown";
 
 interface AISummaryCardProps {
   summary: AISearchSummary;
@@ -51,9 +52,9 @@ export default function AISummaryCard({ summary, query, lang = "en" }: AISummary
               <span className="w-1 h-4 bg-indigo-500 rounded-full mr-2 shrink-0"></span>
               {t.ecosystemOverview}
             </h3>
-            <p className="text-slate-600 text-[14px] sm:text-[15px] leading-relaxed whitespace-pre-line pl-3 border-l-2 border-slate-100">
-              {summary.overallSummary || summary.overview}
-            </p>
+            <div className="pl-3 border-l-2 border-slate-100">
+              <CustomMarkdown content={summary.overallSummary || summary.overview || ""} />
+            </div>
           </section>
         )}
         
@@ -63,9 +64,9 @@ export default function AISummaryCard({ summary, query, lang = "en" }: AISummary
               <span className="w-1 h-4 bg-indigo-500 rounded-full mr-2 shrink-0"></span>
               {t.keyTrends}
             </h3>
-            <p className="text-slate-600 text-[14px] sm:text-[15px] leading-relaxed whitespace-pre-line pl-3 border-l-2 border-slate-100">
-              {summary.trendSummary}
-            </p>
+            <div className="pl-3 border-l-2 border-slate-100">
+              <CustomMarkdown content={summary.trendSummary} />
+            </div>
           </section>
         )}
       </div>
