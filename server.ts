@@ -773,6 +773,45 @@ Return ONLY the raw optimized search query string. Do not include any quotes, ex
     
     if (isPlainMode) {
       const isJa = (lang || "").startsWith("ja"); 
+      const isMobile = req.query.isMobile === "true";
+      
+      // If mobile and Japanese, translate description using Gemini
+      if (isMobile && isJa && items.length > 0 && hasApiKey) {
+        try {
+          const toTranslate = items
+            .map((item, idx) => ({
+              idx,
+              text: item.description || ""
+            }))
+            .filter(x => x.text.trim() !== "");
+          
+          if (toTranslate.length > 0) {
+            const prompt = `Translate the 'text' fields for each object in the following JSON array to Japanese (日本語).
+Keep the translation concise, natural, and friendly.
+Return the result strictly as a JSON array of objects with the exact same 'idx' and the translated 'text' properties. Do not add any markdown formatting, code blocks, or extra text.
+
+Input array to translate:
+${JSON.stringify(toTranslate)}`;
+
+            // Call Gemini
+            const responseText = await callAiContent(req, prompt, "", null);
+            if (responseText) {
+              const cleanJsonText = responseText.trim().replace(/^```json\s*/, "").replace(/```$/, "");
+              const parsed = JSON.parse(cleanJsonText);
+              if (Array.isArray(parsed)) {
+                parsed.forEach((tItem: any) => {
+                  if (items[tItem.idx]) {
+                    items[tItem.idx].translatedDescription = tItem.text;
+                  }
+                });
+              }
+            }
+          }
+        } catch (err: any) {
+          console.error("Failed to translate descriptions for mobile plain search:", err);
+        }
+      }
+
       const mappedItems = items.map((repo: any) => ({
         id: repo.id,
         name: repo.name,
@@ -784,7 +823,7 @@ Return ONLY the raw optimized search query string. Do not include any quotes, ex
           htmlUrl: repo.owner.html_url,
         },
         htmlUrl: repo.html_url,
-        description: repo.description,
+        description: repo.translatedDescription || repo.description,
         stargazersCount: repo.stargazers_count,
         forksCount: repo.forks_count,
         watchersCount: repo.watchers_count || 0,

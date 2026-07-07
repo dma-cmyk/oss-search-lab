@@ -896,7 +896,7 @@ export default function App() {
       const sourcesParam = searchSources.length > 0 ? searchSources.join(",") : "github";
       // Fetch from our full-stack endpoint
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(targetQuery)}&lang=${resolvedLang}&mode=${activeSearchMode}&sources=${sourcesParam}${isReSearch ? "&reSearch=true" : ""}&stream=true`,
+        `/api/search?q=${encodeURIComponent(targetQuery)}&lang=${resolvedLang}&mode=${activeSearchMode}&sources=${sourcesParam}${isReSearch ? "&reSearch=true" : ""}&stream=true&isMobile=${window.innerWidth < 768}`,
         { headers }
       );
 
@@ -989,7 +989,7 @@ export default function App() {
       // Fetch from our full-stack endpoint with page parameter
       const queryToUse = (searchMode === "ai" && optimizedQuery) ? optimizedQuery : searchQuery;
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(queryToUse)}&lang=${resolvedLang}&mode=${searchMode}&page=${nextPage}&sources=${sourcesParam}&stream=true`,
+        `/api/search?q=${encodeURIComponent(queryToUse)}&lang=${resolvedLang}&mode=${searchMode}&page=${nextPage}&sources=${sourcesParam}&stream=true&isMobile=${window.innerWidth < 768}`,
         { headers }
       );
 
