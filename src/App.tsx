@@ -108,7 +108,9 @@ export default function App() {
   const [searchMode, setSearchMode] = useState<"ai" | "plain">("ai");
   const [searchSources, setSearchSources] = useState<string[]>(["github", "gitlab"]);
   const [trendingTimeframe, setTrendingTimeframe] = useState<"day" | "week" | "month">("day");
-  const [lang, setLang] = useState("auto"); // Default to Auto
+  const [lang, setLang] = useState(() => {
+    return localStorage.getItem("oss_search_lang_v1") || "auto";
+  }); // Default to Auto or saved value
   const [resolvedLang, setResolvedLang] = useState("ja"); // Internal code after auto-resolve
   
   const t = getUITranslations(resolvedLang);
@@ -608,6 +610,7 @@ export default function App() {
 
   // Resolve language based on browser environment if 'auto'
   useEffect(() => {
+    localStorage.setItem("oss_search_lang_v1", lang);
     if (lang === "auto") {
       const browserLang = navigator.language.split("-")[0];
       const matches = ["ja", "en", "zh", "es", "de", "fr"];
