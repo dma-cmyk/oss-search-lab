@@ -186,6 +186,7 @@ export default function App() {
   const [trendingPage, setTrendingPage] = useState(1);
   const [trendingHasMore, setTrendingHasMore] = useState(true);
   const [trendingLoadingMore, setTrendingLoadingMore] = useState(false);
+  const [trendingLoadMoreError, setTrendingLoadMoreError] = useState<string | null>(null);
   const trendingObserverRef = useRef<HTMLDivElement | null>(null);
   const isFetchingMoreRef = useRef(false);
   const isTrendingFetchingMoreRef = useRef(false);
@@ -247,9 +248,9 @@ export default function App() {
     const repoKey = `${repo.id}_${repo.source || "github"}`;
     
     // Create clean default title from editorial article headline style
-    const defaultTitle = resolvedLang === "ja" 
+    const defaultTitle = detailData.title || (resolvedLang === "ja" 
       ? `世界を熱狂させる「${repo.fullName}」の正体に迫る。その圧倒的ポテンシャルと現実的な技術制約` 
-      : `Inside ${repo.fullName}: Architectural Auditing, Operational Trade-offs, and Developer Verdict`;
+      : `Inside ${repo.fullName}: Architectural Auditing, Operational Trade-offs, and Developer Verdict`);
 
     const newArticle: SavedReportArticle = {
       id: `art_${Date.now()}`,
@@ -607,6 +608,7 @@ export default function App() {
       setLoadingStatus(null);
       setTrendingRepos([]);
       setTrendingError(null);
+      setTrendingLoadMoreError(null);
       setTrendingPage(1);
       setTrendingHasMore(true);
       try {
@@ -775,6 +777,7 @@ export default function App() {
       }
     } catch (err: any) {
       console.log("Load more trending fetch error:", err);
+      setTrendingLoadMoreError(err.message || String(err));
       setTrendingHasMore(false);
     } finally {
       setTrendingLoadingMore(false);
@@ -784,28 +787,34 @@ export default function App() {
 
   // Set up intersection observer for infinite scroll on trending
   useEffect(() => {
-    if (trendingLoading || trendingLoadingMore || !trendingHasMore || mode !== "home") return;
+    if (trendingLoading || trendingLoadingMore || !trendingHasMore || mode !== "home" || trendingRepos.length === 0) return;
 
     const currentObserverRef = trendingObserverRef.current;
-    if (!currentObserverRef) return;
+    if (!currentObserverRef) {
+      console.log("[TRENDING OBSERVER] Ref is null, skipping setup.");
+      return;
+    }
 
+    console.log("[TRENDING OBSERVER] Setting up observer. Repos count:", trendingRepos.length);
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
+          console.log("[TRENDING OBSERVER] Trigger element intersected! Loading more...");
           loadMoreTrending();
         }
       },
-      { threshold: 0.1, rootMargin: "300px" }
+      { threshold: 0.1, rootMargin: "200px" }
     );
 
     observer.observe(currentObserverRef);
 
     return () => {
       if (currentObserverRef) {
+        console.log("[TRENDING OBSERVER] Cleaning up observer.");
         observer.unobserve(currentObserverRef);
       }
     };
-  }, [trendingLoading, trendingLoadingMore, trendingHasMore, mode, trendingPage, resolvedLang, geminiApiKey, selectedModel, activePersona.prompt, activeAudience.prompt, searchSources, selectedRepo]);
+  }, [trendingLoading, trendingLoadingMore, trendingHasMore, mode, trendingPage, resolvedLang, geminiApiKey, selectedModel, activePersona.prompt, activeAudience.prompt, searchSources, selectedRepo, trendingRepos.length]);
 
   const handleOpenMagazine = () => {
     if (mode === "home") {
@@ -1420,8 +1429,14 @@ export default function App() {
                       </div>
                     )}
                     
-                    {trendingHasMore && (
-                      <div ref={trendingObserverRef} className="h-2 w-full opacity-0" id="trending-infinite-scroll-trigger" />
+                    {trendingHasMore && trendingRepos.length > 0 && (
+                      <div ref={trendingObserverRef} className="h-4 w-full opacity-0" id="trending-infinite-scroll-trigger" />
+                    )}
+
+                    {trendingLoadMoreError && (
+                      <p className="text-red-500 text-[11px] text-center mt-2 font-medium" id="trending-load-more-error">
+                        ⚠️ {resolvedLang === "ja" ? "追加読み込みエラー: " : "Error loading more: "}{trendingLoadMoreError}
+                      </p>
                     )}
 
                     {!trendingHasMore && trendingRepos.length > 0 && (

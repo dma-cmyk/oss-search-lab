@@ -2219,6 +2219,9 @@ Check the official README.md file for full integration details.`;
   }
 
   return {
+    title: isJa 
+      ? `世界を熱狂させる「${repoName}」の正体に迫る。その圧倒的ポテンシャルと現実的な技術制約` 
+      : `Inside ${repoName}: Architectural Auditing, Operational Trade-offs, and Developer Verdict`,
     overview,
     features,
     useCases,
@@ -2676,6 +2679,7 @@ CRITICAL MEDIA SELECTING AND EMBEDDING RULES (AI JUDGMENT MANDATE):
 
       // Sanitize fields to ensure they exist, have correct types, and only contain approved media
       const sanitized = {
+        title: typeof parsedData.title === "string" ? parsedData.title : "",
         overview: safeSanitizeText(parsedData.overview, defaultOverview),
         features: (Array.isArray(parsedData.features) ? parsedData.features : []).map((f: any) => safeSanitizeText(f, defaultFeature)),
         useCases: (Array.isArray(parsedData.useCases) ? parsedData.useCases : []).map((u: any) => safeSanitizeText(u, defaultUseCase)),
@@ -2712,6 +2716,7 @@ CRITICAL MEDIA SELECTING AND EMBEDDING RULES (AI JUDGMENT MANDATE):
     console.log("Detail Generation Error, falling back to empty/default details. Error:", error);
     const isJa = (lang || "").startsWith("ja");
     return res.json({
+      title: "",
       overview: isJa ? "概要情報がありません。" : "No overview details available.",
       features: [],
       useCases: [],

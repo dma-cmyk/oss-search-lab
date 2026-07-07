@@ -359,9 +359,9 @@ export default function RepoDetailView({
 
               {/* Title (Journal Headline Style) */}
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.15] max-w-3xl mx-auto" id="editorial-headline">
-                {lang === "ja" 
+                {detail?.title || (lang === "ja" 
                   ? `世界を熱狂させる「${repository.fullName}」の正体に迫る。その圧倒的ポテンシャルと現実的な技術制約`
-                  : `Inside ${repository.fullName}: Architectural Auditing, Operational Trade-offs, and Developer Verdict`}
+                  : `Inside ${repository.fullName}: Architectural Auditing, Operational Trade-offs, and Developer Verdict`)}
               </h1>
 
               {/* Journal Byline / Metadata Section */}
