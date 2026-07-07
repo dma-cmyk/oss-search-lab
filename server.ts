@@ -577,6 +577,7 @@ app.get("/api/search", async (req, res) => {
     const page = parseInt((req.query.page as string) || "1", 10);
     const sourcesParam = (req.query.sources as string) || "github";
     const isReSearch = req.query.reSearch === "true";
+    const prevOptimized = req.query.prevOptimized as string || "";
     const sources = sourcesParam.split(",");
     const perPage = 9;
     
@@ -622,7 +623,9 @@ CRITICAL TAG INSTRUCTION: If the search query starts with '#' or is a single tec
 
 [RE-SEARCH REQUEST]:
 This is a re-search (regenerating search keywords) request! The user has explicitly requested to regenerate keywords to find different or alternative results.
-Please generate an ALTERNATIVE, fresh, or different set of highly relevant SIMPLE technical keywords (max 2-3 words).`;
+The previous search query that was optimized and tried was: "${prevOptimized}".
+Please generate an ALTERNATIVE, fresh, or different set of highly relevant SIMPLE technical keywords (max 2 words) to find alternative libraries.
+CRITICAL: To avoid "no results found" on GitHub/GitLab (which perform strict AND searches for space-separated keywords), ensure the generated query is extremely concise and stripped of unnecessary qualifiers. Extract and output only the absolute core, minimal keywords (maximum 2 words). Do not repeat the exact combination of words tried in the previous query: "${prevOptimized}".`;
           }
 
           if (personaPrompt || audiencePrompt) {

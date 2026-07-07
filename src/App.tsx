@@ -861,6 +861,7 @@ export default function App() {
 
     const activeSearchMode = overrideMode || searchMode;
     const isReSearch = isReSearchOverride || (targetQuery.toLowerCase() === searchQuery.toLowerCase() && mode === "results");
+    const previousQuery = optimizedQuery; // Preserve the current optimized query before resetting
 
     setLoading(true);
     setLoadingStatus(null);
@@ -900,7 +901,7 @@ export default function App() {
       const sourcesParam = searchSources.length > 0 ? searchSources.join(",") : "github";
       // Fetch from our full-stack endpoint
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(targetQuery)}&lang=${resolvedLang}&mode=${activeSearchMode}&sources=${sourcesParam}${isReSearch ? "&reSearch=true" : ""}&stream=true&isMobile=${window.innerWidth < 768}`,
+        `/api/search?q=${encodeURIComponent(targetQuery)}&lang=${resolvedLang}&mode=${activeSearchMode}&sources=${sourcesParam}${isReSearch ? `&reSearch=true&prevOptimized=${encodeURIComponent(previousQuery)}` : ""}&stream=true&isMobile=${window.innerWidth < 768}`,
         { headers }
       );
 
