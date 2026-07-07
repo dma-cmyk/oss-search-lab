@@ -865,6 +865,7 @@ export default function App() {
     setLoading(true);
     setLoadingStatus(null);
     setError(null);
+    setOptimizedQuery("");
     setSearchQuery(targetQuery);
     setQuery(targetQuery);
     setMode("results");
@@ -929,7 +930,9 @@ export default function App() {
                 } else if (data.type === "error") {
                     setError(data.error + (data.details ? ` (${data.details})` : ""));
                     break;
-                  } else if (data.type === "result") {
+                  } else if (data.type === "optimizedQuery") {
+                  setOptimizedQuery(data.query || "");
+                } else if (data.type === "result") {
                   setRepositories(data.data.repositories || []);
                   setAiSummary(data.data.aiSummary || null);
                   setOptimizedQuery(data.data.optimizedQuery || "");
