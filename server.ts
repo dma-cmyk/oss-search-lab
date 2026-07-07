@@ -943,6 +943,10 @@ Provide your analysis in ${languageName}.`;
               type: Type.STRING,
               description: `Executive brief summarizing the search results and providing any recommendations requested by the query. MUST be written strictly and entirely in ${languageName}.`,
             },
+            trendSummary: {
+              type: Type.STRING,
+              description: `A brief breakdown of key trends, technologies, or ecosystem dynamics identified from the search results. Use markdown lists if appropriate. MUST be written strictly and entirely in ${languageName}.`,
+            },
             rankedItems: {
               type: Type.ARRAY,
               items: {
@@ -961,13 +965,14 @@ Provide your analysis in ${languageName}.`;
               },
             },
           },
-          required: ["title", "summary", "rankedItems"],
+          required: ["title", "summary", "trendSummary", "rankedItems"],
         };
         
     let responseText = "";
     let parsedAI: any = {
       title: "",
       summary: "",
+      trendSummary: "",
       rankedItems: [] as any[],
     };
     try {
@@ -1126,7 +1131,11 @@ Provide your analysis in ${languageName}.`;
     });
     
     return sendData({
-      aiSummary: { title: parsedAI.title, overview: parsedAI.summary },
+      aiSummary: { 
+        title: parsedAI.title, 
+        overallSummary: parsedAI.summary, 
+        trendSummary: parsedAI.trendSummary 
+      },
       optimizedQuery: optimizedQuery,
       repositories: enrichedRepos,
       hasMore: hasMore,
