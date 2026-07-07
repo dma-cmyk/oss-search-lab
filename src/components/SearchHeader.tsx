@@ -164,16 +164,6 @@ export default function SearchHeader({
 
         {/* Right Side Actions on Desktop (hidden on mobile) */}
         <div className="hidden sm:flex items-center space-x-3 shrink-0" id="header-desktop-actions">
-          {/* Settings button */}
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            className="flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 shadow-sm transition cursor-pointer"
-            id="header-settings-btn"
-          >
-            <Settings className="w-3.5 h-3.5 text-slate-400" />
-            <span>{t.settings}</span>
-          </button>
 
           {/* Bookmarks Toggle button */}
           <button
@@ -265,6 +255,17 @@ export default function SearchHeader({
               </div>
             )}
           </div>
+
+          {/* Settings button */}
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            className="flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 shadow-sm transition cursor-pointer"
+            id="header-settings-btn"
+          >
+            <Settings className="w-3.5 h-3.5 text-slate-400" />
+            <span>{t.settings}</span>
+          </button>
         </div>
       </div>
     </header>

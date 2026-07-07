@@ -233,16 +233,6 @@ export default function RepoDetailView({
         <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
           <button
             type="button"
-            onClick={onOpenSettings}
-            className="p-2 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer flex items-center justify-center w-8.5 h-8.5 sm:w-9 sm:h-9"
-            title={lang === "ja" ? "設定を開く" : "Settings"}
-            id="detail-settings-btn"
-          >
-            <Settings className="w-4 h-4 text-slate-400" />
-          </button>
-
-          <button
-            type="button"
             onClick={handleCopyLink}
             className={`p-2 rounded-full border transition cursor-pointer flex items-center justify-center w-8.5 h-8.5 sm:w-9 sm:h-9 ${
               copiedLink
@@ -324,6 +314,17 @@ export default function RepoDetailView({
             )}
             <span className="hidden sm:inline ml-1.5">{repository.source === "gitlab" ? "GitLab" : "GitHub"}</span>
           </a>
+
+          {/* Settings button */}
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            className="p-2 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer flex items-center justify-center w-8.5 h-8.5 sm:w-9 sm:h-9"
+            title={lang === "ja" ? "設定を開く" : "Settings"}
+            id="detail-settings-btn"
+          >
+            <Settings className="w-4 h-4 text-slate-400" />
+          </button>
         </div>
       </header>
 
