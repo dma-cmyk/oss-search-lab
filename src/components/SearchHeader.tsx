@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Globe, ChevronDown, BookOpen, Settings, Sparkles, Github, Gitlab, Menu, X } from "lucide-react";
+import { Search, Globe, ChevronDown, BookOpen, Settings, Sparkles, Github, Gitlab, Menu, X, MessageSquare } from "lucide-react";
 import { SUPPORTED_LANGUAGES, LanguageOption } from "../types";
 import { getUITranslations } from "../lib/translations";
 
@@ -255,6 +255,18 @@ export default function SearchHeader({
               </div>
             )}
           </div>
+
+          {/* Feedback Button */}
+          <a
+            href="https://forms.gle/NmUusbUxy4FbWn3L8"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 shadow-sm transition cursor-pointer"
+            id="header-feedback-btn"
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
+            <span>{selectedLang === "ja" ? "フィードバック" : "Feedback"}</span>
+          </a>
 
           {/* Settings button */}
           <button

@@ -20,6 +20,7 @@ import {
   Clock,
   Star,
   Edit2,
+  MessageSquare,
 } from "lucide-react";
 import {
   Repository,
@@ -1331,6 +1332,16 @@ export default function App() {
               <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
               <span className="hidden sm:inline">{lang === "ja" ? "AI マガジン" : "AI Magazine"}</span>
             </button>
+            <a
+              href="https://forms.gle/NmUusbUxy4FbWn3L8"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-600 shadow-sm transition cursor-pointer"
+              id="home-sticky-feedback-btn"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <span className="hidden sm:inline">{resolvedLang === "ja" ? "フィードバック" : "Feedback"}</span>
+            </a>
             <button
               type="button"
               onClick={() => setIsSettingsOpen(true)}
@@ -2003,10 +2014,19 @@ export default function App() {
       />
 
       {/* Global Minimal Footer */}
-      <footer className="py-6 border-t border-slate-200 bg-white shrink-0 text-center" id="global-footer">
+      <footer className="py-6 border-t border-slate-200 bg-white shrink-0 text-center flex flex-col items-center gap-2" id="global-footer">
         <p className="text-[11px] text-slate-400 font-mono">
           oss-search-lab &copy; 2026 &bull; Powered by Gemini 3.5 &bull; Real-time GitHub Integration
         </p>
+        <a
+          href="https://forms.gle/NmUusbUxy4FbWn3L8"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[11px] text-indigo-500 hover:text-indigo-600 hover:underline font-semibold flex items-center gap-1"
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span>{resolvedLang === "ja" ? "フィードバックを送る" : "Send Feedback"}</span>
+        </a>
       </footer>
 
       {/* Global Mobile Menu Drawer Overlay */}
@@ -2115,6 +2135,18 @@ export default function App() {
                   <Settings className="w-4 h-4 text-slate-400" />
                   <span>{t.settings}</span>
                 </button>
+
+                {/* Feedback */}
+                <a
+                  href="https://forms.gle/NmUusbUxy4FbWn3L8"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full flex items-center space-x-2.5 px-4 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
+                >
+                  <MessageSquare className="w-4 h-4 text-slate-400" />
+                  <span>{resolvedLang === "ja" ? "フィードバック" : "Feedback"}</span>
+                </a>
               </div>
             </div>
 
